@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 600px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .tab-filter {
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #e8f4f8;
+      border-radius: 4px;
+    }
+    .tab-select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .filter-info {
+      font-size: 12px;
+      color: #555;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .clear-filter-btn {
+      padding: 4px 8px;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .clear-filter-btn:hover {
+      background-color: #e68900;
+    }
+    .search-section {
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      box-sizing: border-box;
+    }
+    .multi-param-section {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .multi-param-header {
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #333;
+    }
+    .param-input-row {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    .param-name-input {
+      flex: 1;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    .add-param-btn, .search-all-btn, .clear-params-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .add-param-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .add-param-btn:hover {
+      background-color: #45a049;
+    }
+    .search-all-btn {
+      background-color: #2196F3;
+      color: white;
+      width: 100%;
+      margin-top: 5px;
+    }
+    .search-all-btn:hover {
+      background-color: #0b7dda;
+    }
+    .clear-params-btn {
+      background-color: #f44336;
+      color: white;
+      width: 100%;
+      margin-top: 5px;
+    }
+    .clear-params-btn:hover {
+      background-color: #da190b;
+    }
+    .param-tag {
+      display: inline-block;
+      padding: 4px 8px;
+      margin: 3px;
+      background-color: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #1976d2;
+    }
+    .param-tag .remove-tag {
+      margin-left: 5px;
+      cursor: pointer;
+      color: #f44336;
+      font-weight: bold;
+    }
+    .param-tags-container {
+      margin: 8px 0;
+      min-height: 20px;
+    }
+    .found-values {
+      margin-top: 10px;
+    }
+    .value-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      margin-bottom: 5px;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+    .value-text {
+      flex: 1;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+      margin-right: 10px;
+    }
+    .copy-btn {
+      padding: 4px 8px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .copy-btn:hover {
+      background-color: #45a049;
+    }
+    .copy-btn.copied {
+      background-color: #2196F3;
+    }
+    .param-name {
+      font-weight: bold;
+      color: #555;
+      font-size: 11px;
+    }
+    .controls button {
+      padding: 5px 10px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+    .toggle-capture-btn {
+      padding: 5px 10px;
+      margin-left: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .toggle-capture-btn.capturing {
+      background-color: #f44336;
+      color: white;
+      border: none;
+    }
+    .toggle-capture-btn.paused {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+    .request {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    .request-header {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .method {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: white;
+      margin-right: 5px;
+    }
+    .GET { background-color: #61affe; }
+    .POST { background-color: #49cc90; }
+    .PUT { background-color: #fca130; }
+    .DELETE { background-color: #f93e3e; }
+    .params {
+      background-color: #f5f5f5;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .no-params {
+      color: #888;
+      font-style: italic;
+    }
+    .timestamp {
+      font-size: 11px;
+      color: #666;
+    }
+    .url {
+      word-break: break-all;
+      font-size: 12px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h3>Network Requests</h3>
+    <div class="controls">
+      <button id="toggleCapture" class="toggle-capture-btn capturing">Stop Capturing</button>
+      <button id="refresh">Refresh</button>
+      <button id="clear">Clear</button>
+    </div>
+  </div>
+  
+  <div class="tab-filter">
+    <select id="tabSelect" class="tab-select">
+      <option value="all">All Tabs</option>
+    </select>
+    <div class="filter-info">
+      <span id="filterStatus">Showing requests from all tabs</span>
+      <button id="clearFilter" class="clear-filter-btn" style="display: none;">Clear Filter</button>
+    </div>
+  </div>
+  
+  <div class="search-section">
+    <input type="text" id="searchParam" class="search-input" placeholder="Single parameter search (e.g., token, bearer, authorization)">
+    <div id="foundValues" class="found-values"></div>
+    
+    <div class="multi-param-section">
+      <div class="multi-param-header">Multi-Parameter Search</div>
+      <div class="param-input-row">
+        <input type="text" id="multiParamInput" class="param-name-input" placeholder="Enter parameter name (e.g., userId, storeId, bearer)">
+        <button id="addParam" class="add-param-btn">Add</button>
+      </div>
+      <div id="paramTags" class="param-tags-container"></div>
+      <button id="searchAll" class="search-all-btn" style="display: none;">Search All Parameters</button>
+      <button id="clearParams" class="clear-params-btn" style="display: none;">Clear All Parameters</button>
+      <div id="multiFoundValues" class="found-values"></div>
+    </div>
+  </div>
+  
+  <div id="requests"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Network Parameter Grabber",
+  "version": "1.0",
+  "description": "Captures parameters from network requests",
+  "permissions": [
+    "webRequest",
+    "storage",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
