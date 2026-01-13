@@ -4,6 +4,7 @@ let selectedTabId = 'all';
 let tabsInfo = {};
 let watchedParams = [];
 let isCapturing = true;
+let selectedValues = {}; // Store selected values for each parameter
 
 function getFilteredRequests() {
   if (selectedTabId === 'all') {
@@ -85,6 +86,10 @@ function removeWatchedParam(paramName) {
   updateMultiSearchButtons();
   saveWatchedParams();
   
+  // Remove selected value for this param
+  delete selectedValues[paramName];
+  saveSelectedValues();
+  
   if (watchedParams.length === 0) {
     document.getElementById('multiFoundValues').innerHTML = '';
   }
@@ -92,6 +97,10 @@ function removeWatchedParam(paramName) {
 
 function saveWatchedParams() {
   chrome.storage.local.set({ watchedParams: watchedParams });
+}
+
+function saveSelectedValues() {
+  chrome.storage.local.set({ selectedValues: selectedValues });
 }
 
 function loadWatchedParams() {
@@ -105,6 +114,14 @@ function loadWatchedParams() {
       if (watchedParams.length > 0 && allRequests.length > 0) {
         searchMultipleParameters();
       }
+    }
+  });
+}
+
+function loadSelectedValues() {
+  chrome.storage.local.get(['selectedValues'], (result) => {
+    if (result.selectedValues) {
+      selectedValues = result.selectedValues;
     }
   });
 }
@@ -178,8 +195,13 @@ function displayMultiFoundValues(allResults) {
           <div style="font-weight: bold; color: #1976d2; margin-bottom: 5px; font-size: 12px;">
             ${paramName} (${results.length} found)
           </div>
-          ${results.map((result, index) => `
-            <div class="value-item">
+          ${results.map((result, index) => {
+            const isFirst = index === 0;
+            const isSelected = selectedValues[paramName] === result.value;
+            const shouldCheck = isSelected || (!selectedValues[paramName] && isFirst);
+            return `
+            <div class="value-item ${shouldCheck ? 'selected' : ''}" data-param="${paramName}" data-index="${index}">
+              <input type="radio" class="value-checkbox" name="select_${paramName}" data-param="${paramName}" data-value="${result.value.replace(/"/g, '&quot;')}" ${shouldCheck ? 'checked' : ''}>
               <div style="flex: 1;">
                 <div class="param-name">${result.source}</div>
                 <div class="value-text">${result.value}</div>
@@ -191,7 +213,8 @@ function displayMultiFoundValues(allResults) {
                 Copy
               </button>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       `;
     }
@@ -199,6 +222,26 @@ function displayMultiFoundValues(allResults) {
   
   html += '</div>';
   container.innerHTML = html;
+  
+  // Add click handlers to radio buttons
+  document.querySelectorAll('#multiFoundValues .value-checkbox').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const paramName = this.getAttribute('data-param');
+      const value = this.getAttribute('data-value');
+      
+      // Store the selected value
+      selectedValues[paramName] = value;
+      saveSelectedValues();
+      
+      // Remove selected class from all items with this param
+      document.querySelectorAll(`#multiFoundValues .value-item[data-param="${paramName}"]`).forEach(item => {
+        item.classList.remove('selected');
+      });
+      
+      // Add selected class to parent value-item
+      this.closest('.value-item').classList.add('selected');
+    });
+  });
   
   // Add click handlers to copy buttons
   document.querySelectorAll('#multiFoundValues .copy-btn').forEach(btn => {
@@ -461,6 +504,7 @@ function updateCaptureButton() {
 
 // Initialize param tags display and load saved params
 loadWatchedParams();
+loadSelectedValues();
 loadRequests();
 
 document.getElementById('tabSelect').addEventListener('change', function(e) {
@@ -527,9 +571,11 @@ document.getElementById('searchAll').addEventListener('click', function() {
 
 document.getElementById('clearParams').addEventListener('click', function() {
   watchedParams = [];
+  selectedValues = {};
   updateParamTags();
   updateMultiSearchButtons();
   saveWatchedParams();
+  saveSelectedValues();
   document.getElementById('multiFoundValues').innerHTML = '';
 });
 

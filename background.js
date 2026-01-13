@@ -108,6 +108,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ isCapturing });
   } else if (request.action === 'getCapturingStatus') {
     sendResponse({ isCapturing });
+  } else if (request.action === 'getSelectedValue') {
+    // This will be called from content script context menu
+    const paramName = request.paramName;
+    sendResponse({ value: null }); // Will be handled by popup
   }
   return true;
 });
@@ -209,21 +213,31 @@ function updateContextMenus() {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId.startsWith('paste_')) {
     const paramName = info.menuItemId.replace('paste_', '');
-    const value = getLatestParamValue(paramName);
     
-    if (value) {
-      // Send message to content script to paste the value
-      chrome.tabs.sendMessage(tab.id, {
-        action: 'pasteValue',
-        value: value
-      });
-    } else {
-      // Show notification if no value found
-      chrome.tabs.sendMessage(tab.id, {
-        action: 'showNotification',
-        message: `No value found for parameter: ${paramName}`
-      });
-    }
+    // Get selected value from storage
+    chrome.storage.local.get(['selectedValues'], (result) => {
+      const selectedValues = result.selectedValues || {};
+      let value = selectedValues[paramName];
+      
+      // If no selected value, fall back to latest
+      if (!value) {
+        value = getLatestParamValue(paramName);
+      }
+      
+      if (value) {
+        // Send message to content script to paste the value
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'pasteValue',
+          value: value
+        });
+      } else {
+        // Show notification if no value found
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'showNotification',
+          message: `No value found for parameter: ${paramName}`
+        });
+      }
+    });
   }
 });
 
