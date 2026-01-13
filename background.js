@@ -247,3 +247,43 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     updateContextMenus();
   }
 });
+
+// Handle extension icon click to open in a separate window
+let popupWindowId = null;
+
+chrome.action.onClicked.addListener(() => {
+  // Check if the window is already open
+  if (popupWindowId !== null) {
+    chrome.windows.get(popupWindowId, (window) => {
+      if (chrome.runtime.lastError || !window) {
+        // Window was closed, create a new one
+        createPopupWindow();
+      } else {
+        // Window exists, focus it
+        chrome.windows.update(popupWindowId, { focused: true });
+      }
+    });
+  } else {
+    createPopupWindow();
+  }
+});
+
+function createPopupWindow() {
+  chrome.windows.create({
+    url: 'popup.html',
+    type: 'popup',
+    width: 650,
+    height: 700,
+    left: 100,
+    top: 100
+  }, (window) => {
+    popupWindowId = window.id;
+  });
+
+  // Listen for window close to reset the ID
+  chrome.windows.onRemoved.addListener((windowId) => {
+    if (windowId === popupWindowId) {
+      popupWindowId = null;
+    }
+  });
+}
