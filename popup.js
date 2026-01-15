@@ -176,19 +176,22 @@ function searchMultipleParameters() {
 
 function displayMultiFoundValues(allResults) {
   const container = document.getElementById('multiFoundValues');
-  
+
   const totalResults = Object.values(allResults).reduce((sum, results) => sum + results.length, 0);
-  
+
   if (totalResults === 0) {
     container.innerHTML = '<div style="margin-top: 10px; color: #888; font-style: italic;">No values found for the specified parameters</div>';
     return;
   }
-  
+
+  const COLLAPSE_THRESHOLD = 5;
   let html = '<div style="margin-top: 10px;">';
-  
+
   Object.keys(allResults).forEach(paramName => {
     const results = allResults[paramName];
-    
+    const shouldCollapse = results.length > COLLAPSE_THRESHOLD;
+    const sanitizedParamName = paramName.replace(/[^a-zA-Z0-9]/g, '_');
+
     if (results.length > 0) {
       html += `
         <div style="margin-bottom: 15px;">
@@ -199,8 +202,9 @@ function displayMultiFoundValues(allResults) {
             const isFirst = index === 0;
             const isSelected = selectedValues[paramName] === result.value;
             const shouldCheck = isSelected || (!selectedValues[paramName] && isFirst);
+            const isHidden = shouldCollapse && index >= COLLAPSE_THRESHOLD;
             return `
-            <div class="value-item ${shouldCheck ? 'selected' : ''}" data-param="${paramName}" data-index="${index}">
+            <div class="value-item ${shouldCheck ? 'selected' : ''} ${isHidden ? 'collapsed-item' : ''}" data-param="${paramName}" data-index="${index}" data-param-group="${sanitizedParamName}" ${isHidden ? 'style="display: none;"' : ''}>
               <input type="radio" class="value-checkbox" name="select_${paramName}" data-param="${paramName}" data-value="${result.value.replace(/"/g, '&quot;')}" ${shouldCheck ? 'checked' : ''}>
               <div style="flex: 1;">
                 <div class="param-name">${result.source}</div>
@@ -215,43 +219,70 @@ function displayMultiFoundValues(allResults) {
             </div>
           `;
           }).join('')}
+          ${shouldCollapse ? `
+            <a href="#" class="expand-link" data-param-group="${sanitizedParamName}" data-expanded="false" style="display: block; margin-top: 5px; font-size: 12px; color: #2196F3; text-decoration: none;">
+              Show ${results.length - COLLAPSE_THRESHOLD} more...
+            </a>
+          ` : ''}
         </div>
       `;
     }
   });
-  
+
   html += '</div>';
   container.innerHTML = html;
-  
+
+  // Add click handlers for expand/collapse links
+  document.querySelectorAll('#multiFoundValues .expand-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const paramGroup = this.getAttribute('data-param-group');
+      const isExpanded = this.getAttribute('data-expanded') === 'true';
+      const collapsedItems = document.querySelectorAll(`#multiFoundValues .collapsed-item[data-param-group="${paramGroup}"]`);
+
+      if (isExpanded) {
+        // Collapse
+        collapsedItems.forEach(item => item.style.display = 'none');
+        this.setAttribute('data-expanded', 'false');
+        this.textContent = `Show ${collapsedItems.length} more...`;
+      } else {
+        // Expand
+        collapsedItems.forEach(item => item.style.display = 'flex');
+        this.setAttribute('data-expanded', 'true');
+        this.textContent = 'Show less';
+      }
+    });
+  });
+
   // Add click handlers to radio buttons
   document.querySelectorAll('#multiFoundValues .value-checkbox').forEach(radio => {
     radio.addEventListener('change', function() {
       const paramName = this.getAttribute('data-param');
       const value = this.getAttribute('data-value');
-      
+
       // Store the selected value
       selectedValues[paramName] = value;
       saveSelectedValues();
-      
+
       // Remove selected class from all items with this param
       document.querySelectorAll(`#multiFoundValues .value-item[data-param="${paramName}"]`).forEach(item => {
         item.classList.remove('selected');
       });
-      
+
       // Add selected class to parent value-item
       this.closest('.value-item').classList.add('selected');
     });
   });
-  
+
   // Add click handlers to copy buttons
   document.querySelectorAll('#multiFoundValues .copy-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const value = this.getAttribute('data-value');
-      
+
       navigator.clipboard.writeText(value).then(() => {
         this.textContent = 'Copied!';
         this.classList.add('copied');
-        
+
         setTimeout(() => {
           this.textContent = 'Copy';
           this.classList.remove('copied');
@@ -366,12 +397,12 @@ function searchForParameter(paramName, requests) {
 
 function displayFoundValues(results) {
   const container = document.getElementById('foundValues');
-  
+
   if (results.length === 0) {
     container.innerHTML = '';
     return;
   }
-  
+
   container.innerHTML = `
     <div style="margin-bottom: 8px; font-weight: bold; color: #333;">
       Found ${results.length} value(s):
@@ -391,16 +422,16 @@ function displayFoundValues(results) {
       </div>
     `).join('')}
   `;
-  
+
   // Add click handlers to copy buttons
   document.querySelectorAll('#foundValues .copy-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const value = this.getAttribute('data-value');
-      
+
       navigator.clipboard.writeText(value).then(() => {
         this.textContent = 'Copied!';
         this.classList.add('copied');
-        
+
         setTimeout(() => {
           this.textContent = 'Copy';
           this.classList.remove('copied');
@@ -502,7 +533,32 @@ function updateCaptureButton() {
   }
 }
 
+// Tab switching logic
+function switchTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('.search-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+  // Update tab content
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.getElementById(`${tabName}TabContent`).classList.add('active');
+}
+
+// Initialize tabs - multi-parameter is default
+function initializeTabs() {
+  switchTab('multi');
+
+  document.getElementById('multiTab').addEventListener('click', () => switchTab('multi'));
+  document.getElementById('singleTab').addEventListener('click', () => switchTab('single'));
+  document.getElementById('requestsTab').addEventListener('click', () => switchTab('requests'));
+}
+
 // Initialize param tags display and load saved params
+initializeTabs();
 loadWatchedParams();
 loadSelectedValues();
 loadRequests();

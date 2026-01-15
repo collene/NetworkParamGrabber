@@ -60,8 +60,38 @@
       border-radius: 3px;
       box-sizing: border-box;
     }
+    .search-tabs {
+      display: flex;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #ddd;
+    }
+    .search-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 13px;
+      font-weight: bold;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .search-tab:hover {
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    .search-tab.active {
+      color: #2196F3;
+      border-bottom-color: #2196F3;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
     .multi-param-section {
-      margin-top: 10px;
       padding: 10px;
       background-color: white;
       border-radius: 4px;
@@ -72,6 +102,15 @@
       margin-bottom: 8px;
       font-size: 13px;
       color: #333;
+    }
+    .single-param-section {
+      padding: 10px;
+      background-color: white;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .expand-link:hover {
+      text-decoration: underline !important;
     }
     .param-input-row {
       display: flex;
@@ -277,23 +316,36 @@
   </div>
   
   <div class="search-section">
-    <input type="text" id="searchParam" class="search-input" placeholder="Single parameter search (e.g., token, bearer, authorization)">
-    <div id="foundValues" class="found-values"></div>
-    
-    <div class="multi-param-section">
-      <div class="multi-param-header">Multi-Parameter Search</div>
-      <div class="param-input-row">
-        <input type="text" id="multiParamInput" class="param-name-input" placeholder="Enter parameter name (e.g., userId, storeId, bearer)">
-        <button id="addParam" class="add-param-btn">Add</button>
+    <div class="search-tabs">
+      <button class="search-tab" data-tab="multi" id="multiTab">Multi-Parameter Search</button>
+      <button class="search-tab" data-tab="single" id="singleTab">Single Parameter Search</button>
+      <button class="search-tab" data-tab="requests" id="requestsTab">All Requests</button>
+    </div>
+
+    <div id="multiTabContent" class="tab-content">
+      <div class="multi-param-section">
+        <div class="param-input-row">
+          <input type="text" id="multiParamInput" class="param-name-input" placeholder="Enter parameter name (e.g., userId, storeId, bearer)">
+          <button id="addParam" class="add-param-btn">Add</button>
+        </div>
+        <div id="paramTags" class="param-tags-container"></div>
+        <button id="searchAll" class="search-all-btn" style="display: none;">Search All Parameters</button>
+        <button id="clearParams" class="clear-params-btn" style="display: none;">Clear All Parameters</button>
+        <div id="multiFoundValues" class="found-values"></div>
       </div>
-      <div id="paramTags" class="param-tags-container"></div>
-      <button id="searchAll" class="search-all-btn" style="display: none;">Search All Parameters</button>
-      <button id="clearParams" class="clear-params-btn" style="display: none;">Clear All Parameters</button>
-      <div id="multiFoundValues" class="found-values"></div>
+    </div>
+
+    <div id="singleTabContent" class="tab-content">
+      <div class="single-param-section">
+        <input type="text" id="searchParam" class="search-input" placeholder="Search for a parameter (e.g., token, bearer, authorization)">
+        <div id="foundValues" class="found-values"></div>
+      </div>
+    </div>
+
+    <div id="requestsTabContent" class="tab-content">
+      <div id="requests"></div>
     </div>
   </div>
-  
-  <div id="requests"></div>
   <script src="popup.js"></script>
 </body>
 </html>
